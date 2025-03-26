@@ -6,7 +6,7 @@ export namespace IBookings {
   export interface Query extends IPageQuery {
     bookingId?: number
     userId?: number
-    hotelId?: number
+    hotelId?: string
     roomId?: number
     username?: string
     userPhone?: string
@@ -17,11 +17,12 @@ export namespace IBookings {
     createdAtEnd?: string
   }
 
-  // 编辑form表单
+  // form表单
   export interface Form {
     bookingId?: number
     userId?: number
-    hotelId?: number
+    roomTypeId?: string
+    hotelId?: string
     roomId?: number
     username?: string
     userPhone?: string
@@ -34,7 +35,8 @@ export namespace IBookings {
   export interface Row {
     bookingId?: number
     userId?: number
-    hotelId?: number
+    roomTypeId?: string
+    hotelId?: string
     roomId?: number
     username?: string
     userPhone?: string

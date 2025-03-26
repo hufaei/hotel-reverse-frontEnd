@@ -10,7 +10,6 @@ import {
   Delete,
   EditPen,
 } from '@element-plus/icons-vue'
-import ProTable from '@/components/ProTable/index.vue'
 import {
   createPaymentApi,
   removePaymentApi,

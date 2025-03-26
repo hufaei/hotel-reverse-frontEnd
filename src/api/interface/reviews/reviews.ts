@@ -6,18 +6,22 @@ export namespace IReviews {
   export interface Query extends IPageQuery {
     bookingId?: number
     userId?: number
-    rating?: number
-    comment?: string
+    ratingCeil?: number
+    ratingFloor?: number
     createdAtStart?: string
     createdAtEnd?: string
   }
 
-  // 编辑form表单
+  // form表单
   export interface Form {
     reviewId?: number
     bookingId?: number
     userId?: number
     rating?: number
+    healthRate?: number
+    envRate?: number
+    serviceRate?: number
+    facilitiesRate?: number
     comment?: string
     createdAt?: string
  }
@@ -28,6 +32,10 @@ export namespace IReviews {
     bookingId?: number
     userId?: number
     rating?: number
+    healthRate?: number
+    envRate?: number
+    serviceRate?: number
+    facilitiesRate?: number
     comment?: string
     createdAt?: string
   }

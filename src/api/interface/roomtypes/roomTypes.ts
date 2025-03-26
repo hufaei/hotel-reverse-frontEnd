@@ -4,7 +4,7 @@ export namespace IRoomTypes {
 
   // 查询条件
   export interface Query extends IPageQuery {
-    hotelId?: number
+    hotelId?: String
     roomType?: string
     createdAtStart?: string
     createdAtEnd?: string
@@ -12,23 +12,23 @@ export namespace IRoomTypes {
 
   // 编辑form表单
   export interface Form {
-    roomTypeId?: number
-    hotelId?: number
+    roomTypeId?: String
+    hotelId?: String
     roomType?: string
     price?: number
     photoUrls?: string
-    size?: number
+    info?: string
     description?: string
  }
 
   // list或detail返回结构
   export interface Row {
-    roomTypeId?: number
-    hotelId?: number
+    roomTypeId?: String
+    hotelId?: String
     roomType?: string
     price?: number
     photoUrls?: string
-    size?: number
+    info?: string
     description?: string
     createdAt?: string
   }
