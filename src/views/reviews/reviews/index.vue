@@ -1,32 +1,19 @@
 <template>
   <div class="table-box">
-    
+    <ReviewsForm></ReviewsForm>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import {
-  CirclePlus,
-  Delete,
-  EditPen,
-  Upload,
-  Download,
-} from '@element-plus/icons-vue'
-import ProTable from '@/components/ProTable/index.vue'
-import {
-  createReviewsApi,
   removeReviewsApi,
-  updateReviewsApi,
   getReviewsListApi,
   getReviewsDetailApi,
-  importReviewsExcelApi,
-  exportReviewsExcelApi,
 } from '@/api/modules/reviews/reviews';
 import { useHandleData } from '@/hooks/index';
 import ReviewsForm from '@/views/reviews/reviews/components/ReviewsForm.vue';
 import type { IReviews } from '@/api/interface/reviews/reviews';
-import ImportExcel from '@/components/ImportExcel/index.vue';
 
 defineOptions({
   name: 'ReviewsView'

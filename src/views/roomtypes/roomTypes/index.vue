@@ -6,14 +6,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import {
-  CirclePlus,
-  Delete,
-  EditPen,
-} from '@element-plus/icons-vue'
-import {
   createRoomTypesApi,
   removeRoomTypesApi,
-  updateRoomTypesApi,
   getRoomTypesListApi,
   getRoomTypesDetailApi,
 } from '@/api/modules/roomtypes/roomTypes';

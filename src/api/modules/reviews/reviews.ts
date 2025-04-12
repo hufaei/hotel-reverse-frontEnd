@@ -12,7 +12,15 @@ import type { UploadRawFile } from "element-plus/es/components/upload/src/upload
 export const getReviewsListApi = (params: IReviews.Query) => {
   return http.get<IPage<IReviews.Row>>(ADMIN_MODULE + `/reviews`, params)
 }
-
+/**
+ * 获取用户评论简介视图
+ * @param params 
+ * @returns 
+ */
+export const getUserTotalReviews = (params: { id: number ,bookingId?: string }) => {
+  const { id ,bookingId} = params;
+  return http.get<IReviews.UserRow>(ADMIN_MODULE + `/reviews/user/${id}/${bookingId}`)
+}
 /**
 * 添加
 * @param params

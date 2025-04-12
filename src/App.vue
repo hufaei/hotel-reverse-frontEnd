@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <!-- 只有当用户不在登录或注册页面时才显示导航栏 -->
-    <navBar v-if="!isAuthPage" />
+    <navBar v-if="!isAuthPage && !$route.path.startsWith('/admins')" />
     <router-view />
     <FixedIcons />
   </div>
@@ -32,10 +32,10 @@ const connectGoEasy = async () => {
   
   try {
     goEasy.connect({
-      id: currentUser.id.toString(),
+      id: currentUser.userId.toString(),
       data: {
-        nickname: currentUser.nickname,
-        avatar: currentUser.avatar || 'default-avatar-url'
+        nickname: currentUser.username,
+        email: currentUser.email || ''
       },
       onSuccess: function () {
         console.log('GoEasy connected successfully.');
@@ -88,14 +88,11 @@ provide('isConnected', isConnected);
 <style>
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  /* 设置背景图片 */
   background-image: url(https://s1.hdslb.com/bfs/static/blive/blfe-message-web/static/img/light_bg.8e46311e.png);
   background-size: cover; /* 背景图像覆盖整个容器 */
   background-repeat: no-repeat; /* 背景不重复 */
   background-position: center center; /* 背景居中显示 */
+  color: #2c3e50;
 }
+
 </style>

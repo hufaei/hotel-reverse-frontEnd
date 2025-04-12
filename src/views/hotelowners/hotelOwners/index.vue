@@ -1,5 +1,6 @@
 <template>
   <div class="table-box">
+    hotelOwners
   </div>
 </template>
 

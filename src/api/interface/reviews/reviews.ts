@@ -4,7 +4,7 @@ export namespace IReviews {
 
   // 查询条件
   export interface Query extends IPageQuery {
-    bookingId?: number
+    hotelId?: string
     userId?: number
     ratingCeil?: number
     ratingFloor?: number
@@ -38,6 +38,13 @@ export namespace IReviews {
     facilitiesRate?: number
     comment?: string
     createdAt?: string
+    userInfo?: UserRow
+  }
+  export interface UserRow{
+    userId?: number
+    userName?: string
+    count?: number
+    roomType?: string
   }
 
 }

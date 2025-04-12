@@ -7,35 +7,30 @@
     :ellipsis="false"
     active-text-color="#000000"
   >
-    <el-menu-item index="home">
+    <el-menu-item index="UserHome">
       <el-icon><img src="@/assets/main.png" alt="首页" class="nav-icon"></el-icon>
-      首页
+      首 页
     </el-menu-item>
-    <el-menu-item index="section">
-      <el-icon><img src="@/assets/sections.png" alt="论坛" class="nav-icon"></el-icon>
-      论坛
+    <el-menu-item index="home">
+      <el-icon><img src="@/assets/sections.png" alt="预订" class="nav-icon"></el-icon>
+      酒 店 预 订
     </el-menu-item>
-    <el-menu-item index="publish">
-      <el-icon><img src="@/assets/publish.png" alt="发布" class="nav-icon"></el-icon>
-      发布
+    <el-menu-item index="Orders">
+      <el-icon><img src="@/assets/publish.png" alt="订单" class="nav-icon"></el-icon>
+      我 的 订 单
     </el-menu-item>
     <div class="flex-grow" />
 
     <!-- 用户已登录时显示头像和下拉菜单 -->
     <el-dropdown v-if="isLoggedIn" class="avatar-container" trigger="hover" @command="handleCommand">
       <div class="avatar-wrapper">
-        <el-avatar :size="32" :src="user.avatar" />
-        <span class="nickname">{{ user.nickname }}</span>
+        <span class="nickname">{{ user.username }}</span>
       </div>
       <template #dropdown>
         <el-dropdown-menu>
-          <el-dropdown-item command="profile">
+          <el-dropdown-item command="UserHome">
             <el-icon><img src="@/assets/user.png" alt="用户中心" class="nav-icon"></el-icon>
             用户中心
-          </el-dropdown-item>
-          <el-dropdown-item command="editProfile">
-            <el-icon><img src="@/assets/edit.png" alt="账户设置" class="nav-icon"></el-icon>
-            账户设置
           </el-dropdown-item>
           <el-dropdown-item command="logout" divided>
             <el-icon><img src="@/assets/logout.png" alt="登出" class="nav-icon"></el-icon>
@@ -52,7 +47,7 @@
     </el-menu-item>
 
     <!-- 私信消息按钮，未登录时点击提示登录 -->
-    <el-menu-item index="chat" @click="handleChatClick">
+    <el-menu-item index="Notifications" @click="handleChatClick">
       <mi-notice 
         :width="320"
         :dot="false"
@@ -73,6 +68,7 @@ import { ref, inject, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { useUserStore } from '@/stores/userStore';
+import { logoutApi } from '@/api/modules/system/login';
 
 
 const router = useRouter();
@@ -127,7 +123,7 @@ onMounted(() => {
     window.location.reload();
   } 
 
-  if (user && user.id) {
+  if (user.username && userStore.token) {
     isLoggedIn.value = true;
   } else {
     isLoggedIn.value = false;
@@ -141,15 +137,8 @@ onMounted(() => {
 });   
 
 const handleCommand = (command: string) => {
-  const userId = user.id; // 获取当前用户 ID
 
   switch (command) {
-    case 'profile':
-      router.push({ name: 'profile', params: { userId } });
-      break;
-    case 'editProfile':
-      router.push({ name: 'editProfile'});
-      break;
     case 'logout':
       handleLogout();
       break;
@@ -160,6 +149,7 @@ const handleCommand = (command: string) => {
 };
 
 const handleSelect = (key: string) => {
+  console.log(key);
   if (key === 'logout') {
     handleLogout();
   } else {
@@ -168,12 +158,13 @@ const handleSelect = (key: string) => {
 };
 
 const handleLogout = async () => {
-  // const success = await logoutUser();
-  // if (success) {
-  //   isLoggedIn.value = false; // 更新登录状态
-  //   user = userStore.user;
-  //   router.push({ name: 'home' }); // 登出后导航到首页
-  // }
+  const success = await logoutApi();
+  if (success) {
+    isLoggedIn.value = false; // 更新登录状态
+    userStore.clear(); // 清除用户
+    user = userStore.user;
+    router.push({ name: 'home' }); // 登出后导航到首页
+  }
 };
 
 const goToLogin = () => {
@@ -182,23 +173,22 @@ const goToLogin = () => {
 
 const handleChatClick = () => {
   if (!isLoggedIn.value) {
-    ElMessage.error('请先登录后再查看私信');
+    ElMessage.error('请先登录后再查看通知');
   } else {
-    router.push({ name: 'chat' });
+    router.push({ name: 'Notifications' });
   }
 };
 
 onBeforeUnmount(() => {
-  // 当组件取消挂载时，重置 `hasReloaded` 标志
+  // 重置 `hasReloaded` 标志
   sessionStorage.setItem('hasReloaded', 'false'); // 或者使用 sessionStorage.removeItem('hasReloaded');
 });
 </script>
 
 <style scoped>
 .el-menu-demo {
-  display: flex;
   align-items: center;
-  background: white;
+  background: azure;
   color: black;
 }
 

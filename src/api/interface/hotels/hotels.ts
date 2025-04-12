@@ -42,7 +42,7 @@ export namespace IHotels {
 
   // list或detail返回结构
   export interface Row {
-    hotelId?: String
+    hotelId?: string
     hotelName?: string
     englishName?: string
     province?: string
@@ -60,6 +60,8 @@ export namespace IHotels {
     roomTypeList?: string
     contactPhone?: string
     createdAt?: string
+    img?:string
+    minPrice?:number
   }
 
 }

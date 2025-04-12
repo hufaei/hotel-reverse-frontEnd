@@ -8,19 +8,25 @@
     import { ref } from 'vue';
     import { useRouter } from 'vue-router';
     import { loginApi } from '@/api/modules/system/login';
+    import { useUserStore } from '@/stores/userStore';
     import type { ILogin } from '@/api/interface/system/login';
     import bg1 from '@/assets/background.png'
-  
+    import {
+  recommend
+} from '@/api/modules/hotels/hotels';
     const title="Botsuch Trip";
     const router = useRouter();
     const errorMessage = ref<string | null>(null);
-  
+    const userStore = useUserStore();
     const handleSubmit = async (data: ILogin.LoginParams) => {
         console.log(data);
         const success = await loginApi(data);
+        userStore.setToken(success.data.accessToken);
+        userStore.setUser(success.data.userInfo);
         if (success) {
-        router.push('/'); 
-    }
+          recommend();
+          router.push('/'); 
+        }
   }
   
   

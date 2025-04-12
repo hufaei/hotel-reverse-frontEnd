@@ -1,63 +1,60 @@
 <template>
-  <div class="table-box">
-  
+  <div class="index-container">
+    <el-row>
+      <!-- 左侧菜单区域 -->
+      <el-col :span="4">
+        <el-menu
+          :default-active="activeMenu"
+          class="el-menu-vertical-demo"
+          @select="handleMenuSelect"
+        >
+          <el-menu-item index="orders">我的订单</el-menu-item>
+          <el-menu-item index="profile">个人信息</el-menu-item>
+          <el-menu-item index="security">账号安全</el-menu-item>
+          <el-menu-item index="favorites">我的收藏</el-menu-item>
+          <el-menu-item index="notifications">我的通知</el-menu-item>
+        </el-menu>
+      </el-col>
+      <!-- 右侧内容区域 -->
+      <el-col :span="20">
+        <router-view />
+      </el-col>
+    </el-row>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import {
-  CirclePlus,
-  Delete,
-  EditPen,
-  Upload,
-  Download,
-} from '@element-plus/icons-vue'
-import ProTable from '@/components/ProTable/index.vue'
-import {
-  createUsersApi,
-  removeUsersApi,
-  updateUsersApi,
-  getUsersListApi,
-  getUsersDetailApi,
-  importUsersExcelApi,
-  exportUsersExcelApi,
-} from '@/api/modules/users/users';
-import { useHandleData } from '@/hooks/index';
-import UsersForm from '@/views/users/users/components/UsersForm.vue';
-import type { IUsers } from '@/api/interface/users/users';
+import { ref, watch, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
-defineOptions({
-  name: 'UsersView'
+const activeMenu = ref('orders')
+const router = useRouter()
+const route = useRoute()
+
+// 初始化时根据当前路径设置 activeMenu
+onMounted(() => {
+  const segments = route.path.split('/')
+  activeMenu.value = segments[2] || 'orders'
 })
 
-// 获取table列表
-const getTableList = (params: IUsers.Query) => {
-  let newParams = formatParams(params);
-  return getUsersListApi(newParams);
-};
-const formatParams = (params: IUsers.Query) =>{
-  let newParams = JSON.parse(JSON.stringify(params));
-  newParams.createdAt && (newParams.createdAtStart = newParams.createdAt[0]);
-  newParams.createdAt && (newParams.createdAtEnd = newParams.createdAt[1]);
-  delete newParams.createdAt;
-  return newParams;
-}
-// 打开 drawer(新增、查看、编辑)
-const usersRef = ref<InstanceType<typeof UsersForm>>()
-const openAddEdit = async(title: string, row: any = {}, isAdd = true) => {
-  if (!isAdd) {
-    const record = await getUsersDetailApi({ id: row?.userId })
-    row = record?.data
-  }
-}
-// 删除信息
-const deleteInfo = async (params: IUsers.Row) => {
-  await useHandleData(
-    removeUsersApi,
-    { ids: [params.userId] },
-    `删除【${params.userId}】用户信息表`
-  )
-}
+// 监控路由变化，实时更新 activeMenu
+watch(() => route.path, (newPath) => {
+  const segments = newPath.split('/')
+  activeMenu.value = segments[2] || 'orders'
+})
 
+const handleMenuSelect = (key: string) => {
+  activeMenu.value = key
+  router.push(`/user/${key}`)
+}
 </script>
+
+<style scoped>
+.index-container {
+  padding: 20px;
+}
+.el-menu-vertical-demo {
+  width: 100%;
+  min-height: 400px;
+}
+</style>

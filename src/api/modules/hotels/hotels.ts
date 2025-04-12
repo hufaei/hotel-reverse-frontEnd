@@ -12,7 +12,17 @@ import type { UploadRawFile } from "element-plus/es/components/upload/src/upload
 export const getHotelsListApi = (params: IHotels.Query) => {
   return http.get<IPage<IHotels.Row>>(ADMIN_MODULE + `/hotels`, params)
 }
-
+/**
+ * 推荐
+ * @param params 
+ * @returns 
+ */
+export const getRecommendList = () => {
+  return http.get<IPage<String>>(ADMIN_MODULE + `/hotels/getRecommend`)
+}
+export const recommend = async() => {
+  return http.post(ADMIN_MODULE + `/hotels/recommend`)
+}
 /**
 * 添加
 * @param params
@@ -45,7 +55,7 @@ export const removeHotelsApi = (params: { ids: (string | number)[] }) => {
 * @param params
 * @returns {*}
 */
-export const getHotelsDetailApi = (params: { id: number }) => {
+export const getHotelsDetailApi = (params: { id: string }) => {
   const { id } = params
   return http.get<IHotels.Row>(ADMIN_MODULE + `/hotels/${id}`)
 }
@@ -65,4 +75,39 @@ export const importHotelsExcelApi = (params : UploadRawFile) => {
 */
 export const exportHotelsExcelApi  = (params: IHotels.Query) => {
   return http.download(ADMIN_MODULE + `/hotels/export`, params)
+}
+/**
+* 收藏
+* @param params
+* @returns {*}
+*/
+export const collectedApi  = (params: { id: string }) => {
+  const { id } = params
+  return http.get(ADMIN_MODULE + `/hotels/collect/${id}`)
+}
+
+/**
+* 取消收藏
+* @param params
+* @returns {*}
+*/
+export const disCollectedApi  = (params: { id: string }) => {
+  const { id } = params
+  return http.get(ADMIN_MODULE + `/hotels/disCollect/${id}`)
+}
+
+/**
+* 获取用户收藏列表
+* @param params
+* @returns {*}
+*/
+export const getCollectionApi  = () => {
+  return http.get(ADMIN_MODULE + `/hotels/collection`)
+}
+/**
+ * 搜索接口ES
+ * @returns huoqu
+ */
+export const getSearchHotelId = (keywords: string[]): Promise<any> => {
+  return http.post(ADMIN_MODULE + `/hotels/search`, keywords);
 }

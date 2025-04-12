@@ -1,6 +1,61 @@
 <template>
-  <div></div>
+  <mi-layout >
+    <template #sider>
+        <mi-layout-sider>
+          <mi-layout-sider-logo />
+          <template #menu>
+            <AdminSider/>
+          </template>
+        </mi-layout-sider>
+    </template>
+    <template #header>
+      <mi-layout-header>
+        <!-- <div class="left">
+            <mi-breadcrumb />
+        </div> -->
+        <div class="right">
+            <mi-search />
+            <mi-palette />
+            <mi-dropdown />
+        </div>
+      </mi-layout-header>
+    </template>
+    <template #content>
+      <router-view />
+    </template>
+    <template #footer>
+      <!-- 暂定页尾写什么还不知道 -->
+      <mi-layout-footer>
+      </mi-layout-footer>
+    </template>
+  </mi-layout>
 </template>
+
+<!-- <mi-layout>
+  <mi-layout-sider>
+      <mi-layout-sider-logo />
+      <mi-menu />
+  </mi-layout-sider>
+  <section>
+      <mi-layout-header>
+          <div class="left">
+              <mi-breadcrumb />
+          </div>
+          <div class="right">
+              <mi-search />
+              <mi-palette />
+              <mi-dropdown />
+          </div>
+      </mi-layout-header>
+      <mi-layout-content>
+          <mi-backtop />
+          <mi-anchor />
+      </mi-layout-content>
+      <mi-layout-footer>
+      </mi-layout-footer>
+  </section>
+</mi-layout> -->
+
 
 <script setup lang="ts">
 import { ref } from 'vue'
@@ -19,12 +74,12 @@ import {
   getAdminsDetailApi,
 } from '@/api/modules/admins/admins';
 import { useHandleData } from '@/hooks/index';
-import AdminsForm from '@/views/admins/admins/components/AdminsForm.vue';
+import AdminSider from '@/views/admins/admins/components/AdminSider.vue';
 import type { IAdmins } from '@/api/interface/admins/admins';
 defineOptions({
   name: 'AdminsView'
 })
-
+const isShowBread = ref(false);
 const getTableList = (params: IAdmins.Query) => {
   let newParams = formatParams(params);
   return getAdminsListApi(newParams);
@@ -36,8 +91,8 @@ const formatParams = (params: IAdmins.Query) =>{
   delete newParams.createdAt;
   return newParams;
 }
-// 打开 drawer(新增、查看、编辑)
-const adminsRef = ref<InstanceType<typeof AdminsForm>>()
+
+
 const openAddEdit = async(title: string, row: any = {}, isAdd = true) => {
   if (!isAdd) {
     const record = await getAdminsDetailApi({ id: row?.adminId })
@@ -53,3 +108,8 @@ const deleteInfo = async (params: IAdmins.Row) => {
   // )
 }
 </script>
+<style scoped>
+:global(#app) {
+  background: none !important;
+}
+</style>
