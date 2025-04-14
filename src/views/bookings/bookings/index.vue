@@ -120,7 +120,7 @@ onMounted(async () => {
     }
   }
 
-  // 初始化 Leaflet 地图（默认居中北京）
+  // 初始化 Leaflet 地图（默认居中杭州）
   map = L.map('leaflet-map').setView([30.2689, 121.2152], 10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'

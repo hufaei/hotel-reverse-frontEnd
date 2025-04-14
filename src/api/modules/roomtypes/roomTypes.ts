@@ -44,7 +44,7 @@ export const removeRoomTypesApi = (params: { ids: (string | number)[] }) => {
 * @param params
 * @returns {*}
 */
-export const getRoomTypesDetailApi = (params: { id: number }) => {
+export const getRoomTypesDetailApi = (params: { id: string }) => {
   const { id } = params
   return http.get<IRoomTypes.Row>(ADMIN_MODULE + `/room-types/${id}`)
 }

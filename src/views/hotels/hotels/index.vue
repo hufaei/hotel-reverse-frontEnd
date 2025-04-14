@@ -2,44 +2,68 @@
   <div class="hotel-detail">
     <!-- 第一部分：酒店详情 Card -->
     <el-card class="hotel-info-card" shadow="hover">
-      <!-- Card 头部：酒店名称、英文名称、地址、装修/开业年份 -->
-      <template #header>
-        <div class="card-header">
+      <div class="card-header">
+        <!-- 左侧信息 -->
+        <div class="hotel-info-left">
           <h2 class="hotel-name">{{ hotelDetail?.hotelName }}</h2>
-          <small class="hotel-ename">{{ hotelDetail?.englishName }}</small>
-          <div class="address">
+          <div class="hotel-contact">
+            电话：{{ hotelDetail?.contactPhone }} &nbsp;&nbsp;
             地址：{{ hotelDetail?.country }} {{ hotelDetail?.city }} {{ hotelDetail?.address }}
           </div>
-          <div class="dates">
-            装修年份：{{ hotelDetail?.renovationYear }} &nbsp;&nbsp; 开业年份：{{ hotelDetail?.openingYear }}
+          <div class="hotel-renovation">
+            装修年份：{{ hotelDetail?.renovationYear }}
           </div>
-          <div class="description">
-            {{ hotelDetail?.description }}
+          <div class="hotel-main-info">
+            <el-image
+              style="width: 200px; height: 250px; flex: 1;"
+              :src="hotelDetail?.img"
+              lazy
+              fit="cover"
+            />
+            <div class="hotel-description">
+              {{ hotelDetail?.description }}
+            </div>
           </div>
         </div>
-      </template>
-      <!-- Card 内容：左侧酒店图片，右侧地图 -->
-      <div class="card-content">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-image
-              :src="hotelDetail?.img"
-              fit="cover"
-              class="hotel-img"
-              :lazy="true"
-            />
-          </el-col>
-          <el-col :span="12">
-            <div class="map-container" ref="mapContainer">
-              <!-- leaflet 地图会在此容器中初始化 -->
-              <div id="map" style="width:100%;height:300px;"></div>
-            </div>
-          </el-col>
-        </el-row>
+        <!-- 右侧地图和交通图标 -->
+        <div class="hotel-info-right">
+          <div id="map" class="map-container"></div>
+          <div class="traffic-icons">
+            <template v-for="(item, index) in trafficList" :key="index">
+              <el-tooltip
+                effect="dark"
+                :content="'距离' + item.name + item.distance + ' ' + item.transport + ' ' + item.duration"
+                placement="top"
+              >
+                <div class="traffic-item">
+                  <img
+                    v-if="item.type === 'Airport'"
+                    :src="airplaneIcon"
+                    alt="飞机"
+                    class="traffic-icon"
+                  />
+                  <img
+                    v-else-if="item.type === 'RailwayStation'"
+                    :src="trainIcon"
+                    alt="火车"
+                    class="traffic-icon"
+                  />
+                  <img
+                    v-else-if="item.type === 'MetroEntrance'"
+                    :src="metroIcon"
+                    alt="地铁"
+                    class="traffic-icon"
+                  />
+                  <div class="traffic-distance">{{ item.distance }}</div>
+                </div>
+              </el-tooltip>
+            </template>
+          </div>
+        </div>
       </div>
     </el-card>
 
-    <!-- 第二部分：房型展示（横向滚动） -->
+    <!-- 第二部分：房型展示（卡片式列表，内嵌 Collapse 展开详细信息） -->
     <div class="room-types">
       <h3>房型展示</h3>
       <div class="room-list">
@@ -49,25 +73,60 @@
           class="room-card"
           shadow="hover"
         >
-          <el-image
-            :src="room.photoUrls"
-            fit="cover"
-            class="room-img"
-            :lazy="true"
-          />
-          <div class="room-header">
-            <span class="room-name">{{ room.roomType }}</span>
-            <span class="room-price">￥{{ room.price }}</span>
+          <!-- 卡片头部：图片、基本信息和 info 数据 -->
+          <div class="room-card-header">
+            <el-image
+              :src="room.photoUrls"
+              class="room-thumb"
+              fit="cover"
+              lazy
+            />
+            <div class="room-info-wrapper">
+              <div class="room-basic-info">
+                <div class="room-name">{{ room.roomType }}</div>
+                <div class="room-price">￥{{ room?.price || '200' }}</div>
+              </div>
+              <!-- 将 info 数据以行列形式展示 -->
+              <el-row :gutter="10" class="room-info-descriptions">
+                <el-col
+                  v-for="(value, key) in parseRoomInfo(String(room.info))"
+                  :key="key"
+                  :span="6"
+                >
+                  <div class="info-item">
+                    <span class="info-label">{{ getInfoLabel(key) }}:</span>
+                    <span class="info-value">{{ value }}</span>
+                  </div>
+                </el-col>
+              </el-row>
+              <!-- 预订按钮 -->
+              <div class="room-book-btn">
+                <el-button type="primary" @click="bookNow(room)">立即预订</el-button>
+              </div>
+            </div>
           </div>
-          <div v-if="roomExpanded[String(room.roomTypeId)]" class="room-description">
-            {{ room.description }}
-          </div>
-          <el-button
-            type="text"
-            @click="toggleRoom(String(room.roomTypeId))"
-          >
-            {{ roomExpanded[String(room.roomTypeId)] ? '收起详情' : '展开详情' }}
-          </el-button>
+          <!-- 内嵌 Collapse 展开详细描述，使用网格布局 -->
+          <el-collapse v-model="activeRoomDetails[String(room.roomTypeId)]" expand>
+            <el-collapse-item :name="room.roomTypeId">
+              <template #title>
+                <span>查看详情</span>
+              </template>
+              <div class="room-detail-grid">
+                <el-row :gutter="10">
+                  <el-col
+                    v-for="(value, key) in parseRoomDetail(String(room.description))"
+                    :key="key"
+                    :span="6"
+                  >
+                    <div class="detail-item">
+                      <div class="detail-label">{{ key }}</div>
+                      <div class="detail-value">{{ value }}</div>
+                    </div>
+                  </el-col>
+                </el-row>
+              </div>
+            </el-collapse-item>
+          </el-collapse>
         </el-card>
       </div>
     </div>
@@ -75,10 +134,9 @@
     <!-- 第三部分：评论展示 -->
     <div class="comments-section">
       <h3>酒店评论</h3>
-      <!-- 评论头部：总评分 + 细分评分（2*2 布局） -->
       <div class="ratings-header">
         <div class="total-rating">
-          <el-rate :model-value="totalRating" disabled show-text></el-rate>
+          <el-rate :model-value="totalRating" disabled></el-rate>
           <span class="score-text">{{ totalRating }}</span>
         </div>
         <div class="detailed-ratings">
@@ -86,27 +144,26 @@
             <el-col :span="12">
               <div class="detail-rate">
                 <span>健康评分：</span>
-                <el-rate :model-value="healthRate" disabled show-text></el-rate>
+                <el-rate :model-value="healthRate" disabled></el-rate>
               </div>
               <div class="detail-rate">
                 <span>环境评分：</span>
-                <el-rate :model-value="envRate" disabled show-text></el-rate>
+                <el-rate :model-value="envRate" disabled></el-rate>
               </div>
             </el-col>
             <el-col :span="12">
               <div class="detail-rate">
                 <span>服务评分：</span>
-                <el-rate :model-value="serviceRate" disabled show-text></el-rate>
+                <el-rate :model-value="serviceRate" disabled></el-rate>
               </div>
               <div class="detail-rate">
                 <span>设施评分：</span>
-                <el-rate :model-value="facilitiesRate" disabled show-text></el-rate>
+                <el-rate :model-value="facilitiesRate" disabled></el-rate>
               </div>
             </el-col>
           </el-row>
         </div>
       </div>
-      <!-- 评论列表：左右布局 -->
       <div class="comments-list">
         <el-row
           v-for="review in reviewsList"
@@ -114,14 +171,13 @@
           class="comment-item"
           :gutter="20"
         >
-          <!-- 左侧：用户头像及基本信息 -->
           <el-col :span="6">
             <div class="user-info">
               <el-image
-                src='https://img1.tucang.cc/api/image/show/c023f25f13c75149d280e93de3a185bf'
+                src="https://img1.tucang.cc/api/image/show/c023f25f13c75149d280e93de3a185bf"
                 fit="cover"
                 class="user-avatar"
-                :lazy="true"
+                lazy
               />
               <div class="user-name">{{ review.userInfo?.userName }}</div>
               <div class="user-extra">
@@ -131,7 +187,6 @@
               </div>
             </div>
           </el-col>
-          <!-- 右侧：评论内容及时间 -->
           <el-col :span="18">
             <div class="comment-content">
               <div class="comment-text">{{ review.comment }}</div>
@@ -145,7 +200,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { getHotelsDetailApi } from '@/api/modules/hotels/hotels'
 import { getReviewsListApi, getUserTotalReviews } from '@/api/modules/reviews/reviews'
 import { getRoomTypesListApi } from '@/api/modules/roomtypes/roomTypes'
@@ -153,30 +209,42 @@ import type { IHotels } from '@/api/interface/hotels/hotels'
 import type { IReviews } from '@/api/interface/reviews/reviews'
 import type { IRoomTypes } from '@/api/interface/roomtypes/roomTypes'
 import { useHotelHistoryStore, type HotelHistory } from '@/stores/hotelHistory'
-const gril = "https://img1.tucang.cc/api/image/show/04471e3ecadaace4602d66453e1b8522"
-// 引入 leaflet 及其样式
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
-/** 测试数据：路由参数用死数据 */
-const hotelId = "JD0000001970"
+// 导入本地图标资源
+import locationIcon from '@/assets/定位.png'
+import airplaneIcon from '@/assets/飞机.png'
+import trainIcon from '@/assets/火车.png'
+import metroIcon from '@/assets/地铁.png'
 
-// 声明响应式变量
+const route = useRoute()
+const router = useRouter()
+const hotelId = (route.params.id as string) || "JD0000001970"
+
 const hotelDetail = ref<IHotels.Row | null>(null)
 const roomTypesList = ref<IRoomTypes.Row[]>([])
 const reviewsList = ref<IReviews.Row[]>([])
+const trafficList = ref<TrafficItem[]>([])
 
-// 房间展开状态：key 为 roomTypeId，值为布尔
-const roomExpanded = reactive<Record<string, boolean>>({})
+// 用于房型卡片中 Collapse 展开状态管理（以房型 id 为 key，对应值为数组）
+const activeRoomDetails = reactive<Record<string, string[]>>({})
 
-// 默认评分数据（可从接口获取或自行计算）
+// 初始化时为每个房型初始化状态
+watch(roomTypesList, (newList) => {
+  newList.forEach(room => {
+    if (!activeRoomDetails[String(room.roomTypeId)]) {
+      activeRoomDetails[String(room.roomTypeId)] = []
+    }
+  })
+})
+
 const totalRating = ref(4.5)
 const healthRate = ref(4)
 const envRate = ref(4.2)
 const serviceRate = ref(4.8)
 const facilitiesRate = ref(4.3)
 
-// 用于格式化评论列表接口参数
 const formatParams = (params: IReviews.Query) => {
   const newParams = JSON.parse(JSON.stringify(params))
   if (newParams.createdAt) {
@@ -187,40 +255,104 @@ const formatParams = (params: IReviews.Query) => {
   return newParams
 }
 
-// 包装评论列表接口
 const getReviewsList = (params: IReviews.Query) => {
   const newParams = formatParams(params)
   return getReviewsListApi(newParams)
 }
 
-// 切换房型详情展开/收起
-const toggleRoom = (roomId: string) => {
-  roomExpanded[roomId] = !roomExpanded[roomId]
-}
-
-// 格式化订单入住日期：提取 bookingCreateTime 字段，格式化为 "xxxx年x月"
 const formatBookingDate = (dateStr: string) => {
   if (!dateStr) return ''
   const d = new Date(dateStr)
   return `${d.getFullYear()}年${d.getMonth() + 1}月`
 }
 
-const mapContainer = ref<HTMLElement | null>(null)
-const hotelHistoryStore = useHotelHistoryStore()
+interface TrafficItem {
+  type: string         // Airport, RailwayStation, MetroEntrance
+  name: string
+  distance: string     // 例如 "19.2公里"
+  transport: string    // 例如 "驾车" 或 "步行"
+  duration: string     // 例如 "20分钟"
+}
+
+function parseTraffic(trafficStr: string): TrafficItem[] {
+  return trafficStr.split('###').map(item => {
+    const parts = item.split(',')
+    return {
+      type: parts[0],
+      name: parts[1],
+      distance: parts[2],
+      transport: parts[3],
+      duration: parts[4]
+    }
+  })
+}
+
+// 解析房型 info 数据（假设为 JSON 格式字符串）
+function parseRoomInfo(infoStr: string): Record<string, string> {
+  try {
+    return JSON.parse(infoStr)
+  } catch (e) {
+    return {}
+  }
+}
+
+// 将 info key 转换为描述性标签
+function getInfoLabel(key: string): string {
+  const infoLabelMap: Record<string, string> = {
+    floor: "楼层",
+    checkin: "入住人数",
+    wifi: "WIFI",
+    bed: "床型",
+    area: "面积(㎡)",
+    window: "窗户",
+    smoke: "吸烟",
+    breakfast: "早餐"
+  }
+  return infoLabelMap[key] || key
+}
+
+// 解析房型详细描述文本，将各类别分离后返回对象
+function parseRoomDetail(detailStr: string): Record<string, string> {
+  const detailObj: Record<string, string> = {}
+  const unified = detailStr.replace(/；/g, ";")
+  const segments = unified.split(";").filter(s => s.trim() !== "")
+  segments.forEach(segment => {
+    const parts = segment.split(":")
+    if (parts.length >= 2) {
+      const key = parts[0].trim()
+      const value = parts.slice(1).join(":").trim()
+      detailObj[key] = value
+    }
+  })
+  return detailObj
+}
+
+// 预订按钮点击事件（示例）
+function bookNow(room: IRoomTypes.Row) {
+  // 此处可跳转到预订页面或调起预订逻辑
+  console.log("预订房型：", room.roomTypeId)
+}
+
 onMounted(() => {
-  // 1. 获取酒店详情
   getHotelsDetailApi({ id: hotelId })
     .then((res) => {
       hotelDetail.value = res.data
-      console.log('查询酒店详情成功：', hotelDetail.value)
-      var hotel: HotelHistory = {
+
+      // 记录浏览历史（示例）
+      const hotelHistoryStore = useHotelHistoryStore()
+      const hotel: HotelHistory = {
         hotelId: hotelDetail.value?.hotelId ?? '',
         hotelName: hotelDetail.value?.hotelName ?? '',
         img: hotelDetail.value?.img ?? '',
-        englishName: hotelDetail.value?.address ?? '',
+        englishName: hotelDetail.value?.address ?? ''
       }
       hotelHistoryStore.addHotel(hotel)
-      // 初始化地图（假设 hotelDetail 包含 lat 和 lng 字段）
+
+      // 解析交通数据
+      const trafficDataStr = hotelDetail.value?.traffic ?? ''
+      trafficList.value = parseTraffic(trafficDataStr)
+
+      // 初始化地图
       if (hotelDetail.value && hotelDetail.value.latitude && hotelDetail.value.longitude) {
         const map = L.map('map').setView(
           [hotelDetail.value.latitude, hotelDetail.value.longitude],
@@ -231,23 +363,17 @@ onMounted(() => {
         }).addTo(map)
         L.marker([hotelDetail.value.latitude, hotelDetail.value.longitude]).addTo(map)
       }
-      // 2. 根据酒店ID获取房型列表数据
+
+      // 获取房型列表数据
       return getRoomTypesListApi({ hotelId, limit: 10, page: 1 })
     })
     .then((res) => {
       roomTypesList.value = res.data.rows
-      console.log('查询酒店房型列表成功：', roomTypesList.value)
-      // 初始化房间展开状态
-      roomTypesList.value.forEach(room => {
-        roomExpanded[String(room.roomTypeId)] = false
-      })
-      // 3. 获取酒店评论列表数据
+      // 获取酒店评论列表数据
       return getReviewsList({ hotelId, limit: 10, page: 1 })
     })
     .then((res) => {
       reviewsList.value = res.data.rows
-      console.log('查询酒店评论列表成功：', reviewsList.value)
-      // 4. 为每条评论加载对应的用户视图数据（直接挂载到 review 对象上）
       return Promise.all(
         reviewsList.value.map((review) =>
           getUserTotalReviews({ id: Number(review.userId), bookingId: String(review.bookingId) })
@@ -258,9 +384,6 @@ onMounted(() => {
         )
       )
     })
-    .then(() => {
-      console.log('加载评论对应用户视图数据成功：', reviewsList.value)
-    })
     .catch((error) => {
       console.error('数据加载失败：', error)
     })
@@ -270,127 +393,279 @@ onMounted(() => {
 <style scoped>
 .hotel-detail {
   padding: 20px;
+  background-color: #f5f7fa;
 }
+
+/* 酒店详情 Card */
 .hotel-info-card {
   margin-bottom: 20px;
+  border-radius: 8px;
+  overflow: hidden;
 }
+
 .card-header {
-  line-height: 1.6;
-}
-.hotel-name {
-  margin: 0;
-}
-.hotel-ename {
-  color: #999;
-  font-size: 14px;
-}
-.address,
-.dates,
-.description {
-  margin-top: 5px;
-  font-size: 14px;
-}
-.hotel-img {
-  width: 100%;
-  height: 300px;
-  object-fit: cover;
-  border-radius: 4px;
-}
-.map-container {
-  position: relative;
-}
-.room-types {
-  margin-bottom: 20px;
-}
-.room-list {
-  display: flex;
-  overflow-x: auto;
-  gap: 20px;
-  padding-bottom: 10px;
-}
-.room-card {
-  min-width: 250px;
-  flex-shrink: 0;
-}
-.room-img {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-  border-radius: 4px;
-}
-.room-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
+  align-items: flex-start;
 }
-.room-name {
-  font-size: 16px;
+
+.hotel-info-left {
+  flex: 1;
+  padding-right: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
-.room-price {
-  font-size: 18px;
+
+.hotel-name {
+  font-size: 24px;
   font-weight: bold;
-  color: #f56c6c;
+  margin-bottom: 8px;
 }
-.room-description {
+
+.hotel-contact {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+.hotel-renovation {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+.hotel-main-info {
+  width: 100%;
+  display: flex;
+}
+
+.hotel-description {
+  flex: 1;
+  margin-left: 20px;
+  font-size: 14px;
+  color: #333;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 10;
+  overflow: hidden;
+}
+
+.hotel-info-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.map-container {
+  width: 100%;
+  height: 300px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.traffic-icons {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
   margin-top: 10px;
+}
+
+.traffic-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.traffic-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.traffic-distance {
   font-size: 14px;
   color: #666;
+  margin-top: 4px;
 }
-.comments-section {
+
+/* 房型展示 */
+.room-types {
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 8px;
   margin-bottom: 20px;
 }
-.ratings-header {
+
+.room-types h3 {
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+.room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* 房型卡片 */
+.room-card {
+  padding: 15px;
+}
+
+/* 卡片头部 */
+.room-card-header {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
-.total-rating {
-  margin-right: 20px;
+
+.room-thumb {
+  width: 300px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 15px;
+}
+
+.room-info-wrapper {
+  flex: 1;
   display: flex;
-  align-items: center;
+  flex-direction: column;
 }
-.score-text {
-  margin-left: 5px;
-  font-size: 16px;
+
+.room-basic-info {
+  margin-bottom: 10px;
+}
+
+.room-name {
+  font-size: 18px;
   font-weight: bold;
-}
-.detailed-ratings .detail-rate {
   margin-bottom: 5px;
 }
-.comment-item {
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #ebeef5;
+
+.room-price {
+  font-size: 16px;
+  color: #f56c6c;
 }
+
+/* 横向 info 展示 */
+.room-info-descriptions {
+  margin: 10px 0;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+}
+
+.info-label {
+  font-weight: bold;
+  margin-right: 3px;
+}
+
+.info-value {
+  color: #555;
+}
+
+/* 预订按钮 */
+.room-book-btn {
+  margin-top: 10px;
+  text-align: right;
+}
+
+/* 展开详情的网格布局 */
+.room-detail-grid {
+  margin-top: 10px;
+}
+
+.detail-item {
+  padding: 5px;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.detail-label {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 3px;
+}
+
+.detail-value {
+  font-size: 14px;
+  color: #555;
+}
+
+/* 评论展示 */
+.comments-section {
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.comments-section h3 {
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+.ratings-header {
+  margin-bottom: 15px;
+}
+
+.total-rating {
+  display: flex;
+  align-items: center;
+}
+
+.total-rating .score-text {
+  margin-left: 8px;
+  font-size: 16px;
+  color: #333;
+}
+
+.detailed-ratings .detail-rate {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #555;
+}
+
+.comments-list .comment-item {
+  margin-bottom: 20px;
+}
+
 .user-info {
   text-align: center;
 }
+
 .user-avatar {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
+
 .user-name {
-  font-weight: bold;
-  margin-bottom: 3px;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 4px;
 }
+
 .user-extra {
   font-size: 12px;
-  color: #666;
+  color: #999;
 }
+
 .comment-content {
-  background: #f9f9f9;
-  padding: 10px;
-  border-radius: 4px;
-  position: relative;
+  font-size: 14px;
+  color: #555;
 }
+
 .comment-time {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
   font-size: 12px;
   color: #999;
+  margin-top: 6px;
 }
 </style>

@@ -23,6 +23,14 @@ export const createBookingsApi = (params: IBookings.Form) => {
 }
 
 /**
+ * 取消订单（用户、酒店）
+ * @param params 
+ * @returns 
+ */
+export const cancelBookingsApi = (params: {bookingId: number, reason: string}) => {
+  return http.post(ADMIN_MODULE + `/bookings/cancel`, params)
+}
+/**
 * 修改
 * @param params
 * @returns {*}

@@ -44,8 +44,8 @@ export const removePaymentApi = (params: { ids: (string | number)[] }) => {
 * @param params
 * @returns {*}
 */
-export const getPaymentDetailApi = (params: { id: number }) => {
+export const getPaymentDetailByBooking = (params: { id: number }) => {
   const { id } = params
-  return http.get<IPayment.Row>(ADMIN_MODULE + `/payment/${id}`)
+  return http.get<IPayment.Row>(ADMIN_MODULE + `/payment/byBooking/${id}`)
 }
 

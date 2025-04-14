@@ -43,6 +43,7 @@ export namespace IBookings {
     bookingDate?: string
     status?: string
     createdAt?: string
+    isReview?: boolean
   }
 
 }

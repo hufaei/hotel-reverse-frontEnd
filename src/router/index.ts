@@ -123,7 +123,7 @@ const routes = [
     meta: { title: '支付页面' }
   },
   {
-    path: '/reviews',
+    path: '/reviews/:bookingId',
     name: 'Reviews',
     component: ReviewsView,
     meta: { title: '评价页面' }
