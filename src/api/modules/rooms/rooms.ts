@@ -66,3 +66,21 @@ export const importRoomsExcelApi = (params : UploadRawFile) => {
 export const exportRoomsExcelApi  = (params: IRooms.Query) => {
   return http.download(ADMIN_MODULE + `/rooms/export`, params)
 }
+/**
+ * 状态->空闲
+ */
+export const toReady = (params: IRooms.IdUpdate) =>{
+  return http.put(ADMIN_MODULE + `/rooms/toReady`, params)
+}
+/**
+ * 状态->入住
+ */
+export const toCheckIn = (params: IRooms.IdUpdate) =>{
+  return http.put(ADMIN_MODULE + `/rooms/toCheckIn`, params)
+}
+/**
+ * 状态->打扫中
+ */
+export const toCleaning = (params: IRooms.IdUpdate) =>{
+  return http.put(ADMIN_MODULE + `/rooms/toCleaning`, params)
+}

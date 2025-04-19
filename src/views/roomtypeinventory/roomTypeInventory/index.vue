@@ -6,12 +6,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import {
-  CirclePlus,
-  Delete,
-  EditPen,
-} from '@element-plus/icons-vue'
-import ProTable from '@/components/ProTable/index.vue'
-import {
   createRoomTypeInventoryApi,
   removeRoomTypeInventoryApi,
   updateRoomTypeInventoryApi,

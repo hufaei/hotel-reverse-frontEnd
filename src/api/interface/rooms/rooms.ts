@@ -17,6 +17,7 @@ export namespace IRooms {
     roomNumber?: string
     roomStatus?: string
     roomType?: string
+    price?: number
  }
 
   // list或detail返回结构
@@ -26,6 +27,10 @@ export namespace IRooms {
     roomNumber?: string
     roomStatus?: string
     roomType?: string
+  }
+
+  export interface IdUpdate {
+    roomId?: number
   }
 
 }

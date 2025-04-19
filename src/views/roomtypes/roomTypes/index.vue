@@ -6,7 +6,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import {
-  createRoomTypesApi,
   removeRoomTypesApi,
   getRoomTypesListApi,
   getRoomTypesDetailApi,

@@ -23,7 +23,7 @@ export namespace IRoomTypes {
 
   // list或detail返回结构
   export interface Row {
-    roomTypeId?: String
+    roomTypeId?: string
     hotelId?: String
     roomType?: string
     price?: number

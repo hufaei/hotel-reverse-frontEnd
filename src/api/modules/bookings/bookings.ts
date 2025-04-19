@@ -31,6 +31,22 @@ export const cancelBookingsApi = (params: {bookingId: number, reason: string}) =
   return http.post(ADMIN_MODULE + `/bookings/cancel`, params)
 }
 /**
+ * 确认--酒店
+ * @param params 
+ * @returns 
+ */
+export const confirmBookingsApi = (params: {bookingId: number, roomId:number,reason: string}) => {
+  return http.put(ADMIN_MODULE + `/bookings/confirm`, params)
+}
+/**
+ * 取消订单（用户、酒店）
+ * @param params 
+ * @returns 
+ */
+export const finishBookingsApi = (params: {bookingId: number,roomId:number, reason: string}) => {
+  return http.post(ADMIN_MODULE + `/bookings/finish`, params)
+}
+/**
 * 修改
 * @param params
 * @returns {*}

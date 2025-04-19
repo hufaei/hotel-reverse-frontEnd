@@ -26,7 +26,6 @@ import {
 import { useHandleData } from '@/hooks/index';
 import HotelOwnersForm from '@/views/hotelowners/hotelOwners/components/HotelOwnersForm.vue';
 import type { IHotelOwners } from '@/api/interface/hotelowners/hotelOwners';
-import ImportExcel from '@/components/ImportExcel/index.vue';
 defineOptions({
   name: 'HotelOwnersView'
 })

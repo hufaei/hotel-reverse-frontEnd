@@ -74,7 +74,7 @@ const menus = reactive([
                 name: 'FeedBackCtrl',
                 path: '/admins/feedback',
                 meta: {
-                    title: '评论汇总',
+                    title: '房间管理',
                     subTitle: 'Feedback',
                 }
             }

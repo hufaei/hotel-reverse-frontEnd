@@ -47,7 +47,7 @@ export const removeUsersApi = (params: { ids: (string | number)[] }) => {
 */
 export const getUsersDetailApi = (params: { id: number }) => {
   const { id } = params
-  return http.get<IUsers.Row>(ADMIN_MODULE + `/users/${id}`)
+  return http.get<IUsers.Row>(ADMIN_MODULE + `/users/detail/${id}`)
 }
 
 /**
