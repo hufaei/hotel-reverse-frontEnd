@@ -102,12 +102,12 @@ export const disCollectedApi  = (params: { id: string }) => {
 * @returns {*}
 */
 export const getCollectionApi  = () => {
-  return http.get(ADMIN_MODULE + `/hotels/collection`)
+  return http.get<IHotels.Row[]>(ADMIN_MODULE + `/hotels/collection`)
 }
 /**
  * 搜索接口ES
- * @returns huoqu
+ * @returns huoque
  */
-export const getSearchHotelId = (keywords: string[]): Promise<any> => {
-  return http.post(ADMIN_MODULE + `/hotels/search`, keywords);
+export const getSearchHotelId = (params: {keywords:string[], dateStart: String, dateEnd: String}): Promise<any> => {
+  return http.post(ADMIN_MODULE + `/hotels/search`, params);
 }

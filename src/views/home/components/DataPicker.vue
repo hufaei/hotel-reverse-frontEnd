@@ -40,17 +40,19 @@
 </template>
 
 <script setup>
-import { ref ,inject, onMounted} from 'vue';
+import { ref ,defineEmits, onMounted} from 'vue';
 import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
-const chilldInfo = inject('keywords')
+import { useSearchStore } from '@/stores/userSearchStore';
+
+const emit = defineEmits(['search']);
 const router = useRouter();
 
 const keyWords = ref('');
 const location = ref('');
 const dateRange = ref([]);
 const stayInfo = ref('');
-
+const searchStore = useSearchStore();
 // 默认时间设置（入住时间为14:00，离店时间为12:00）
 const defaultTime = [
   new Date(2000, 0, 1, 14, 0),
@@ -106,23 +108,24 @@ const calculateStayDuration = (dates) => {
 // 搜索酒店操作：只要求至少填写一个关键词，合并两项后跳转到 /bookings 页面
 const searchHotels = () => {
   if (!keyWords.value && !location.value) {
-    ElMessage.error('请输入搜索关键词');
-    return;
+    ElMessage.error('请输入搜索关键词或地点')
+    return
   }
-  // 合并关键词（如果两项都有值，则用空格隔开）
-  const keyword = [keyWords.value, location.value].filter(Boolean).join(' ');
-  router.push({
-    path: '/bookings',
-    query: { keywords: keyword }
-  });
+  // 更新全局 Store
+  searchStore.$patch({
+    keywords: keyWords.value,
+    location: location.value,
+    dateRange: dateRange.value
+  })
+  // 跳转到 bookings 页面，无需再传 query
+  router.push('/bookings')
+  // 触发自定义事件，让父组件处理搜索逻辑
+  emit('search');
 };
 onMounted(() => {
-  console.log(chilldInfo)
-  if (chilldInfo) {
-    const [defaultKeywords, defaultLocation] = chilldInfo.split(' ');
-    keyWords.value = defaultKeywords;
-    location.value = defaultLocation;
-  }
+  keyWords.value = searchStore.keywords
+  location.value = searchStore.location
+  dateRange.value = searchStore.dateRange
 })
 </script>
 

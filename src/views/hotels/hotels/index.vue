@@ -5,7 +5,16 @@
       <div class="card-header">
         <!-- 左侧信息 -->
         <div class="hotel-info-left">
-          <h2 class="hotel-name">{{ hotelDetail?.hotelName }}</h2>
+          <div style="display: flex;flex-direction: row; justify-content: space-between;">
+            <h2 class="hotel-name">{{ hotelDetail?.hotelName }}</h2>
+            <div style="width:30px;height:30px;cursor:pointer;" @click="toggleCollect">
+              <img
+                :src="isCollected ? collectedActiveIcon : collectedIcon"
+                alt="收藏"
+                class="collect-icon"
+              />
+            </div>
+          </div>
           <div class="hotel-contact">
             电话：{{ hotelDetail?.contactPhone }} &nbsp;&nbsp;
             地址：{{ hotelDetail?.country }} {{ hotelDetail?.city }} {{ hotelDetail?.address }}
@@ -202,7 +211,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getHotelsDetailApi } from '@/api/modules/hotels/hotels'
+import { getHotelsDetailApi,collectedApi,disCollectedApi } from '@/api/modules/hotels/hotels'
 import { getReviewsListApi, getUserTotalReviews } from '@/api/modules/reviews/reviews'
 import { getRoomTypesListApi } from '@/api/modules/roomtypes/roomTypes'
 import type { IHotels } from '@/api/interface/hotels/hotels'
@@ -217,11 +226,15 @@ import locationIcon from '@/assets/定位.png'
 import airplaneIcon from '@/assets/飞机.png'
 import trainIcon from '@/assets/火车.png'
 import metroIcon from '@/assets/地铁.png'
+import collectedIcon from '@/assets/收藏.png'            // 收藏未激活
+import collectedActiveIcon from '@/assets/收藏-a.png'    // 收藏已激活
+import { is } from '@/utils/is'
 
 const route = useRoute()
 const router = useRouter()
 const hotelId = (route.params.id as string) || "JD0000001970"
-
+// 收藏状态
+const isCollected = ref(false)
 const hotelDetail = ref<IHotels.Row | null>(null)
 const roomTypesList = ref<IRoomTypes.Row[]>([])
 const reviewsList = ref<IReviews.Row[]>([])
@@ -230,6 +243,19 @@ const trafficList = ref<TrafficItem[]>([])
 // 用于房型卡片中 Collapse 展开状态管理（以房型 id 为 key，对应值为数组）
 const activeRoomDetails = reactive<Record<string, string[]>>({})
 
+// 切换收藏
+async function toggleCollect() {
+  try {
+    if(isCollected.value) {
+      await disCollectedApi({ id: hotelId })
+    }else{
+      await collectedApi({ id: hotelId })
+    }
+    isCollected.value = !isCollected.value
+  } catch (error) {
+    console.error('收藏状态切换失败：', error)
+  }
+}
 // 初始化时为每个房型初始化状态
 watch(roomTypesList, (newList) => {
   newList.forEach(room => {

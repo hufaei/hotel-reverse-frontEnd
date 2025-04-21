@@ -30,45 +30,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import deleteIcon from '@/assets/delete.png'
 import deleteHoverIcon from '@/assets/delete-a.png'
 import type { IHotels } from '@/api/interface/hotels/hotels'
-import { useHandleData } from '@/hooks/index';
-import { disCollectedApi } from '@/api/modules/hotels/hotels';
+import { useHandleData } from '@/hooks/index'
+import { disCollectedApi, getCollectionApi } from '@/api/modules/hotels/hotels'
+
 const hoveredId = ref<string>('')
 
 // 收藏酒店数据
-const hotels = ref<IHotels.Row[]>([
-  {
-    hotelId: "dwahuidwa",
-    img: 'https://img1.tucang.cc/api/image/show/fe94928dfb6984559d7b9ca155e13434',
-    hotelName: '五星级大酒店',
-    address: '北京市朝阳区',
-    stars: 5
-  },
-  {
-    hotelId: "fehsuidw",
-    img: 'https://img1.tucang.cc/api/image/show/451df148544fa8c180cee925f2b161be',
-    hotelName: '舒适连锁酒店',
-    address: '上海市浦东新区',
-    stars: 4
-  },
-  {
-    hotelId: "festh",
-    img: 'https://img1.tucang.cc/api/image/show/51148907155259773bb905a15f1641ae',
-    hotelName: '经济型快捷酒店',
-    address: '广州市天河区',
-    stars: 3
-  },
-  {
-    hotelId: "dwhauifew",
-    img: 'https://img1.tucang.cc/api/image/show/451df148544fa8c180cee925f2b161be',
-    hotelName: '豪华度假村',
-    address: '海南省三亚市',
-    stars: 5
-  },
-])
+const hotels = ref<IHotels.Row[]>([])
+
+// 获取收藏数据
+const fetchCollection = async () => {
+  try {
+    const res = await getCollectionApi()
+    console.log('获取收藏列表成功', res)
+    hotels.value = res.data || []
+  } catch (err) {
+    console.error('获取收藏列表失败', err)
+  }
+}
 
 async function removeFavorite(hotelId: string) {
   await useHandleData(
@@ -76,9 +59,14 @@ async function removeFavorite(hotelId: string) {
     { id: hotelId },
     `确定取消收藏该酒店`
   )
-  console.log('取消收藏：', hotelId)
   hotels.value = hotels.value.filter(h => h.hotelId !== hotelId)
 }
+
+// 页面加载时调用
+onMounted(() => {
+  fetchCollection()
+})
+
 </script>
 
 <style scoped>

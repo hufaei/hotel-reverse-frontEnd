@@ -31,6 +31,7 @@ export namespace IUsers {
     username?: string
     email?: string
     phone?: string
+    balance?: number
     createdAt?: string
   }
 

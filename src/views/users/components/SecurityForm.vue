@@ -8,14 +8,15 @@
           <p class="hint">建议定期更换</p>
         </div>
         <div class="card-middle">
-          
           <p>
             安全性高的密码可以使账号更安全。建议您定期更换密码，
             且设置一个包含数字和字母，并且长度超过8位以上的密码。
           </p>
         </div>
         <div class="card-right">
-          <el-button type="primary" size="small" @click="handleAction('password')">修改</el-button>
+          <el-button type="primary" size="small" @click="handleAction('password')">
+            修改
+          </el-button>
         </div>
       </div>
     </el-card>
@@ -25,17 +26,18 @@
       <div class="card-content">
         <div class="card-left">
           <span class="card-title">绑定手机</span>
-          <p class="phone-number">+86-199****0320</p>
+          <p class="phone-number">{{ user.phone || '无' }}</p>
         </div>
         <div class="card-middle">
-          
           <p>
             绑定手机后，您即可享受手机号登录、动态码登录、找回密码等。为了帐号安全，
             建议您在更换手机号后第一时间更换绑定手机。
           </p>
         </div>
         <div class="card-right">
-          <el-button type="primary" size="small" @click="handleAction('phone')">修改</el-button>
+          <el-button type="primary" size="small" @click="handleAction('phone')">
+            {{ user.phone ? '修改' : '设置绑定' }}
+          </el-button>
         </div>
       </div>
     </el-card>
@@ -45,14 +47,17 @@
       <div class="card-content">
         <div class="card-left">
           <span class="card-title">绑定邮箱</span>
+          <p class="email-address">{{ user.email || '无' }}</p>
         </div>
         <div class="card-middle">
           <p>
-            绑定E-mail后，您即可使用E-mail登录或找回密码等。
+            绑定E‑mail后，您即可使用E‑mail登录或找回密码等。
           </p>
         </div>
         <div class="card-right">
-          <el-button type="primary" size="small" @click="handleAction('email')">设置绑定邮箱</el-button>
+          <el-button type="primary" size="small" @click="handleAction('email')">
+            {{ user.email ? '修改' : '设置绑定邮箱' }}
+          </el-button>
         </div>
       </div>
     </el-card>
@@ -60,8 +65,33 @@
 </template>
 
 <script setup lang="ts">
-function handleAction(path: string) {
-  console.log(`跳转至: ${path}`);
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/userStore';
+
+const router = useRouter()
+const userStore = useUserStore()
+
+// 直接使用 store 中的用户信息
+const user = computed(() => ({
+  phone: userStore.user.phone,
+  email: userStore.user.email
+}))
+
+function handleAction(type: string) {
+  switch (type) {
+    case 'password':
+      router.push('/forget')
+      break
+    case 'phone':
+      // router.push(user.value.phone ? '/modify-phone' : '/bind-phone')
+      break
+    case 'email':
+      // router.push(user.value.email ? '/modify-email' : '/bind-email')
+      break
+    default:
+      break
+  }
 }
 </script>
 
@@ -76,7 +106,7 @@ function handleAction(path: string) {
   margin-bottom: 20px;
   border: 1px solid #ebeef5;
   border-radius: 4px;
-  height: 150px; /* 固定高度，确保所有卡片大小一致 */
+  height: 150px;
 }
 
 .card-content {
@@ -86,12 +116,11 @@ function handleAction(path: string) {
   padding: 16px;
 }
 
-/* 左侧标题占 1 份，中间描述占 3 份，右侧按钮占 1 份 */
 .card-left {
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  flex: 1;
 }
 
 .card-middle {
@@ -116,7 +145,8 @@ function handleAction(path: string) {
   margin-bottom: 5px;
 }
 
-.phone-number {
+.phone-number,
+.email-address {
   font-size: 16px;
   font-weight: 500;
   color: #303133;

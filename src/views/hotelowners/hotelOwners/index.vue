@@ -7,14 +7,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import {
-  CirclePlus,
-  Delete,
-  EditPen,
-  Upload,
-  Download,
-} from '@element-plus/icons-vue'
-import ProTable from '@/components/ProTable/index.vue'
-import {
   createHotelOwnersApi,
   removeHotelOwnersApi,
   updateHotelOwnersApi,

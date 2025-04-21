@@ -30,49 +30,9 @@
     </template>
   </mi-layout>
 </template>
-
-<!-- <mi-layout>
-  <mi-layout-sider>
-      <mi-layout-sider-logo />
-      <mi-menu />
-  </mi-layout-sider>
-  <section>
-      <mi-layout-header>
-          <div class="left">
-              <mi-breadcrumb />
-          </div>
-          <div class="right">
-              <mi-search />
-              <mi-palette />
-              <mi-dropdown />
-          </div>
-      </mi-layout-header>
-      <mi-layout-content>
-          <mi-backtop />
-          <mi-anchor />
-      </mi-layout-content>
-      <mi-layout-footer>
-      </mi-layout-footer>
-  </section>
-</mi-layout> -->
-
-
 <script setup lang="ts">
 import { ref } from 'vue'
-import {
-  CirclePlus,
-  Delete,
-  EditPen,
-  Upload,
-  Download,
-} from '@element-plus/icons-vue'
-import {
-  createAdminsApi,
-  removeAdminsApi,
-  updateAdminsApi,
-  getAdminsListApi,
-  getAdminsDetailApi,
-} from '@/api/modules/admins/admins';
+import {getAdminsListApi,getAdminsDetailApi,} from '@/api/modules/admins/admins';
 import { useHandleData } from '@/hooks/index';
 import AdminSider from '@/views/admins/admins/components/AdminSider.vue';
 import type { IAdmins } from '@/api/interface/admins/admins';

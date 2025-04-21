@@ -3,7 +3,7 @@
     <!-- 左侧区域：日期选择器、酒店搜索输入及酒店列表 -->
     <el-col :span="14">
       <!-- 将 URL 中的关键词传递给 DataPicker，保留之前搜索的输入 -->
-      <DataPicker :location="keywords" :keywords="keywords" />
+      <DataPicker :location="keywords" :keywords="keywords" @search="fetchHotels"/>
       
       <!-- 酒店列表展示 -->
       <div class="hotel-list">
@@ -61,11 +61,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted ,provide} from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import DataPicker from '@/views/home/components/DataPicker.vue';
 import { getHotelsDetailApi, getSearchHotelId } from '@/api/modules/hotels/hotels';
 import { useHotelHistoryStore } from '@/stores/hotelHistory';
+import {useSearchStore} from '@/stores/userSearchStore'
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { IHotels } from '@/api/interface/hotels/hotels';
@@ -74,10 +75,11 @@ const route = useRoute();
 const router = useRouter();
 const hotelHistoryStore = useHotelHistoryStore();
 hotelHistoryStore.loadHistory();
-
+const searchStore = useSearchStore()
 // 从 URL 中获取搜索关键词（这里直接传入原始字符串）
-const keywords = (route.query.keywords as string) || '';
-provide("keywords", keywords);
+const keywords = searchStore.keywords || '';
+const location = searchStore.location || '';
+const dataRange = searchStore.dateRange || '';
 
 const hotelIds = ref<string[]>([]);
 const defaultHotelIds = [
@@ -89,15 +91,18 @@ const defaultHotelIds = [
 const hotels = ref<IHotels.Row[]>([]);
 let map: L.Map | null = null;
 let currentMarker: L.Marker | null = null;
+const fetchHotels = async () => {
+  const keywords = searchStore.keywords || '';
+  const location = searchStore.location || '';
+  const dataRange = searchStore.dateRange || [];
 
-onMounted(async () => {
-  // 如果存在搜索关键词，则调用搜索接口获取酒店 ID 列表
   if (keywords) {
     try {
-      console.log("keywords", keywords);
-      // 先拆分关键词字符串，传入一个字符串数组给接口
-      const searchKeywords = keywords.trim().split(/\s+/);
-      const res = await getSearchHotelId(searchKeywords);
+      const res = await getSearchHotelId({
+        keywords: [keywords, location],
+        dateStart: dataRange[0],
+        dateEnd: dataRange[1]
+      });
       hotelIds.value = res || [];
     } catch (error) {
       console.error("搜索酒店失败，使用默认酒店数据", error);
@@ -107,7 +112,6 @@ onMounted(async () => {
     hotelIds.value = defaultHotelIds;
   }
 
-  // 发起所有酒店详情请求（若 hotelIds 数组为空则不调用）
   if (hotelIds.value.length) {
     const fetchPromises = hotelIds.value.map(id =>
       getHotelsDetailApi({ id }).then(res => res.data)
@@ -119,7 +123,9 @@ onMounted(async () => {
       console.error("获取酒店详情失败:", error);
     }
   }
-
+};
+onMounted(async () => {
+  fetchHotels();
   // 初始化 Leaflet 地图（默认居中杭州）
   map = L.map('leaflet-map').setView([30.2689, 121.2152], 10);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
