@@ -40,12 +40,12 @@ export const removeRoomTypeInventoryApi = (params: { ids: (string | number)[] })
 }
 
 /**
-* 获取详情
+* 获取当天详情
 * @param params
 * @returns {*}
 */
-export const getRoomTypeInventoryDetailApi = (params: { id: string }) => {
-  const { id } = params
-  return http.get<IRoomTypeInventory.Row>(ADMIN_MODULE + `/room-type-inventory/${id}`)
+export const getRoomTypeInventoryDetailApi = (params: { roomTypeId: string }) => {
+  const { roomTypeId } = params
+  return http.get<IRoomTypeInventory.Row>(ADMIN_MODULE + `/room-type-inventory/${roomTypeId}`)
 }
 

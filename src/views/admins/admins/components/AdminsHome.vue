@@ -65,13 +65,12 @@ import { ref, onMounted } from 'vue'
 import { getBookingsListApi } from '@/api/modules/bookings/bookings'
 import type { IBookings } from '@/api/interface/bookings/bookings'
 import { getUsersDetailApi } from '@/api/modules/users/users'
-import type { IUsers } from '@/api/interface/users/users'
 import { getRoomTypesDetailApi } from '@/api/modules/roomtypes/roomTypes'
-import type { IRoomTypes } from '@/api/interface/roomtypes/roomTypes'
 import { getPaymentDetailByBooking } from '@/api/modules/payment/payment'
-import type { IPayment } from '@/api/interface/payment/payment'
 import type { TextSetting } from '@miitvip/admin-pro'
-
+import { useAdminStore } from '@/stores/hotelAdminStore'
+const adminStore = useAdminStore()
+const ownerHotelId = adminStore.user.ownerHotelId
 // 定义展示订单数据的类型
 interface OrderItemDisplay {
   bookingId: number
@@ -100,6 +99,7 @@ onMounted(async () => {
   try {
     // 传入空参数，查询所有预订单
     const res = await getBookingsListApi({
+      hotelId: ownerHotelId,
       page: 1,
       limit: 3
     })

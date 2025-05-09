@@ -18,7 +18,7 @@ export const getBookingsListApi = (params: IBookings.Query) => {
 * @param params
 * @returns {*}
 */
-export const createBookingsApi = (params: IBookings.Form) => {
+export const createBookingsApi = (params: IBookings.Create) => {
   return http.post(ADMIN_MODULE + `/bookings`, params)
 }
 

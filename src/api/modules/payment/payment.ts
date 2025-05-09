@@ -29,6 +29,14 @@ export const createPaymentApi = (params: IPayment.Form) => {
 export const updatePaymentApi = (params: IPayment.Form) => {
   return http.put(ADMIN_MODULE + `/payment`, params)
 }
+/**
+* 支付
+* @param params
+* @returns {*}
+*/
+export const paidApi = (params: IPayment.Form) => {
+  return http.put(ADMIN_MODULE + `/payment/paid`, params)
+}
 
 /**
 * 删除
@@ -47,5 +55,14 @@ export const removePaymentApi = (params: { ids: (string | number)[] }) => {
 export const getPaymentDetailByBooking = (params: { id: number }) => {
   const { id } = params
   return http.get<IPayment.Row>(ADMIN_MODULE + `/payment/byBooking/${id}`)
+}
+/**
+* 获取详情
+* @param params
+* @returns {*}
+*/
+export const getPaymentDetailByHotel = (params: { id: string }) => {
+  const { id } = params
+  return http.get<IPayment.Row[]>(ADMIN_MODULE + `/payment/byHotelId/${id}`)
 }
 

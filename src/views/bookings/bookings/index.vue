@@ -21,11 +21,15 @@
               <p class="hotel-english">{{ hotel.englishName }}</p>
               <p class="hotel-address">地址：{{ hotel.country+(hotel.address || '') }}电话：{{ hotel.contactPhone }}</p>
               <p class="hotel-phone">简介：{{ hotel.description }}</p>
-              <el-rate
-              v-model="hotel.stars"
-            disabled
-            text-color="#ff9900"
-          ></el-rate>
+              <div style="display: flex;justify-content: space-between;align-items: center">
+                <el-rate
+                v-model="hotel.stars"
+                disabled
+                text-color="#ff9900"
+              ></el-rate>
+              <span class="rate-text">{{ hotel?.rate}}</span>
+              </div>
+              
               <p class="hotel-price">￥{{ hotel.minPrice }} 起</p>
             </div>
           </div>
@@ -249,5 +253,11 @@ function handleHotelClick(hotel: any) {
   font-size: 12px;
   color: #666;
   margin: 0;
+}
+.rate-text {
+  margin-left: 10px;
+  font-size: 25px;
+  font-weight: bold;
+  color: #ffd000; /* 数值评分颜色，可自定义 */
 }
 </style>

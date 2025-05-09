@@ -10,7 +10,6 @@
         <template #default="scope">
           <template v-if="scope.row.status === 'PENDING_CONFIRMATION'">
             <el-button
-              size="mini"
               type="primary"
               @click="handleConfirm(scope.row)"
             >确认</el-button>
@@ -41,7 +40,10 @@ import type { IBookings } from '@/api/interface/bookings/bookings'
 import { getRoomTypesDetailApi } from '@/api/modules/roomtypes/roomTypes'
 import { getUsersDetailApi } from '@/api/modules/users/users'
 
-const hotelId = "JD0000001970"
+import { useAdminStore } from '@/stores/hotelAdminStore'
+
+const adminStore = useAdminStore()
+const ownerHotelId = adminStore.user.ownerHotelId
 const currentPage = ref(1)
 const totalBookings = ref(0)
 const bookingList = ref<Array<any>>([])
@@ -49,7 +51,8 @@ const bookingList = ref<Array<any>>([])
 const fetchBookings = async (page: number) => {
   try {
     // 查询预订单（传入 hotelId、limit=10、page）
-    const res = await getBookingsListApi({ hotelId, limit: 10, page })
+    const res = await getBookingsListApi({ hotelId:ownerHotelId, limit: 10, page })
+    console.log(res.data)
     if (res?.data) {
       totalBookings.value = res.data.total || 0
       const bookings: IBookings.Row[] = res.data.rows || []

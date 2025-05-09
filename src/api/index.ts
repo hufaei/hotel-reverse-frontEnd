@@ -27,7 +27,6 @@ class RequestHttp {
   constructor(config: AxiosRequestConfig) {
     // instantiation
     this.service = axios.create(config);
-
     /**
      * @description 请求拦截器
      * 客户端发送请求 -> [请求拦截器] -> 服务器

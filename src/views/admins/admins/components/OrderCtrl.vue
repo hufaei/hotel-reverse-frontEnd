@@ -19,13 +19,14 @@ import { getBookingsListApi } from '@/api/modules/bookings/bookings'
 import type { IBookings } from '@/api/interface/bookings/bookings'
 import { getPaymentDetailByBooking } from '@/api/modules/payment/payment'
 import type { IPayment } from '@/api/interface/payment/payment'
-
+import { useAdminStore } from '@/stores/hotelAdminStore'
 const tableData = ref<IPayment.Row[]>([])
-
+  const adminStore = useAdminStore()
+const ownerHotelId = adminStore.user.ownerHotelId
 const fetchOrders = async () => {
   try {
     // 查询预订单列表（这里只取bookingId，可根据需求传入其他参数）
-    const res = await getBookingsListApi({})
+    const res = await getBookingsListApi({hotelId:ownerHotelId,page:1,limit:10})
     if (res?.data) {
       const bookings: IBookings.Row[] = res.data.rows || []
       // 对每个预订单调用 getPaymentDetailByBooking 获取支付详情

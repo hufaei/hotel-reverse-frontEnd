@@ -30,6 +30,15 @@ export namespace IBookings {
     status?: string
     createdAt?: string
  }
+   // 创建表单
+   export interface Create {
+    roomTypeId?: string
+    hotelId?: string
+    bookCount?: number
+    userPhone?: string
+    bookingDate?: string
+    bookingEnd?: string
+ }
 
   // list或detail返回结构
   export interface Row {
@@ -41,6 +50,7 @@ export namespace IBookings {
     username?: string
     userPhone?: string
     bookingDate?: string
+    bookingEnd?: string
     status?: string
     createdAt?: string
     isReview?: boolean

@@ -62,6 +62,7 @@ export namespace IHotels {
     createdAt?: string
     img?:string
     minPrice?:number
+    rate?:number
   }
 
 }

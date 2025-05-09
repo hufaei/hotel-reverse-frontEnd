@@ -13,6 +13,7 @@
             :src="order.roomImage"
             alt="房间图片"
             v-if="order.roomImage"
+            @click="handleRoomClick(order.booking.hotelId)"
           />
           <div class="order-details">
             <p class="order-info">
@@ -41,13 +42,13 @@
             <mi-button
               v-if="order.booking.status === 'CONFIRMED' && order.payment?.paymentStatus === 'PAID'"
               :text="cancelText"
-              :link="order.link"
+              @click="openCancelDialog(order)"
             />
             <!-- 待付款：订单状态为 UNPAID 显示去支付按钮 -->
             <mi-button
               v-if="order.payment?.paymentStatus === 'UNPAID'"
               :text="payText"
-              :link="order.link"
+              :link="order.payLink"
             />
             <!-- 待评价：支付单\预订单状态 FINISHED 且未评价显示评价按钮 -->
             <mi-button
@@ -55,7 +56,7 @@
               :circle="false"
               :radius="4"
               :text="reviewText"
-              :link="order.link"
+              :link="order.reviewLink"
             />
           </div>
         </div>
@@ -73,6 +74,7 @@
             :src="order.roomImage"
             alt="房间图片"
             v-if="order.roomImage"
+            @click="handleRoomClick(order.booking.hotelId)"
           />
           <div class="order-details">
             <p class="order-info">
@@ -99,7 +101,7 @@
             <mi-button
               v-if="order.booking.status === 'CONFIRMED'"
               :text="cancelText"
-              :link="order.link"
+              :link="order.reviewLink"
             />
           </div>
         </div>
@@ -117,6 +119,7 @@
             :src="order.roomImage"
             alt="房间图片"
             v-if="order.roomImage"
+            @click="handleRoomClick(order.booking.hotelId)"
           />
           <div class="order-details">
             <p class="order-info">
@@ -140,7 +143,7 @@
             </div>
           </div>
           <div class="order-actions">
-            <mi-button :text="payText" :link="order.link" />
+            <mi-button :text="payText" :link="order.payLink" />
           </div>
         </div>
       </el-tab-pane>
@@ -157,6 +160,7 @@
             :src="order.roomImage"
             alt="房间图片"
             v-if="order.roomImage"
+            @click="handleRoomClick(order.booking.hotelId)"
           />
           <div class="order-details">
             <p class="order-info">
@@ -184,7 +188,7 @@
               :circle="false"
               :radius="4"
               :text="reviewText"
-              :link="order.link"
+              :link="order.reviewLink"
             />
           </div>
         </div>
@@ -208,6 +212,7 @@ import type { IPayment } from '@/api/interface/payment/payment'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import type { TextSetting } from '@miitvip/admin-pro'
+import { pa } from 'element-plus/es/locale/index.mjs'
 
 // 订单项数据结构：包含预订、支付、酒店、房型信息
 interface OrderItem {
@@ -216,7 +221,8 @@ interface OrderItem {
   hotelName?: string
   roomName?: string
   roomImage?: string
-  link?: string
+  reviewLink?: string
+  payLink?: string
 }
 
 const activeName = ref('first')
@@ -259,45 +265,47 @@ const fetchOrders = async () => {
     const bookingsResponse = await getBookingsListApi({ userId, limit: 10, page: 1 })
     if (bookingsResponse?.data) {
       const bookings: IBookings.Row[] = bookingsResponse.data.rows
-      // 针对每个预订依次调用支付详情及酒店、房型详情接口
-      const orders: OrderItem[] = await Promise.all(
-        bookings.map(async (booking) => {
-          let payment: IPayment.Row | null = null
-          if (booking.bookingId) {
-            // 根据 bookingId 获取支付详情
-            const paymentResponse = await getPaymentDetailByBooking({ id: booking.bookingId })
-            payment = paymentResponse?.data || null
-          }
-          let hotelName = ''
-          let roomName = ''
-          let roomImage = ''
-          // 根据 booking 中的 hotelId 和 roomTypeId 获取酒店和房型详情
-          if (booking.hotelId && booking.roomTypeId) {
-            const [hotelRes, roomTypeRes] = await Promise.all([
-              getHotelsDetailApi({ id: booking.hotelId }),
-              getRoomTypesDetailApi({ id: booking.roomTypeId })
-            ])
-            hotelName = hotelRes?.data?.hotelName || ''
-            roomName = roomTypeRes?.data?.roomType || ''
-            roomImage = roomTypeRes?.data?.photoUrls || ''
-          }
-          return {
-            booking,
-            payment,
-            hotelName,
-            roomName,
-            roomImage,
-            link: `/reviews/${booking.bookingId}`
-          }
-        })
-      )
+       const orders: OrderItem[] = []
+       for (const booking of bookings) {
+         // 1. 支付详情
+         let payment: IPayment.Row | null = null
+         if (booking.bookingId) {
+           const paymentResponse = await getPaymentDetailByBooking({ id: booking.bookingId })
+           payment = paymentResponse?.data || null
+         }
+      
+         // 2. 酒店 & 房型详情（依次请求）
+         let hotelName = ''
+         let roomName  = ''
+         let roomImage = ''
+         if (booking.hotelId && booking.roomTypeId) {
+           const hotelRes    = await getHotelsDetailApi({ id: booking.hotelId })
+           const roomTypeRes = await getRoomTypesDetailApi({ id: booking.roomTypeId })
+           hotelName = hotelRes?.data?.hotelName || ''
+           roomName  = roomTypeRes?.data?.roomType    || ''
+           roomImage = roomTypeRes?.data?.photoUrls   || ''
+         }
+      
+         // 3. 组装并推入结果数组
+         orders.push({
+           booking,
+           payment,
+           hotelName,
+           roomName,
+           roomImage,
+           reviewLink: `/reviews/${booking.bookingId}`,
+           payLink: `/payment?bookingId=${booking.bookingId}`
+         })
+       }
       orderList.value = orders
     }
   } catch (error) {
     console.error('获取订单数据失败：', error)
   }
 }
-
+const handleRoomClick = async (params: any) => {
+  router.push({path:`/hotels/${params}`})
+}
 onMounted(() => {
   fetchOrders()
 })
@@ -328,20 +336,17 @@ const openCancelDialog = (order: OrderItem) => {
     })
 }
 
-// 去支付：通过路由跳转到支付页面
-const goToPayment = (order: OrderItem) => {
-  router.push({ name: 'Payment', query: { bookingId: order.booking.bookingId } })
-}
-
 // 根据订单状态返回对应的文字显示
 const orderStatus = (order: OrderItem): string => {
+
+  console.log(order.payLink,"pay状态："+order.payment?.paymentStatus+"booking状态"+order.booking.status)
   if (order.payment?.paymentStatus === 'UNPAID') return '待付款'
   if (order.booking.status === 'CONFIRMED' && order.payment?.paymentStatus === 'PAID') return '未出行'
   if (order.booking.status === 'FINISHED' && order.payment?.paymentStatus === 'FINISHED') {
     return order.booking.isReview ? '已完成' : '待评价'
   }
-  if (order.booking.status === 'FINISHED' && order.payment?.paymentStatus === 'CANCEL') return '已取消'
-  return '未知状态'
+  if (order.booking.status === 'CANCELED' && order.payment?.paymentStatus === 'CANCEL') return '已取消'
+  return '待确认'
 }
 
 // 计算属性：根据订单状态进行过滤

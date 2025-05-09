@@ -20,7 +20,7 @@
             地址：{{ hotelDetail?.country }} {{ hotelDetail?.city }} {{ hotelDetail?.address }}
           </div>
           <div class="hotel-renovation">
-            装修年份：{{ hotelDetail?.renovationYear }}
+            装修年份：{{ hotelDetail?.renovationYear ? hotelDetail.renovationYear : '不详' }}
           </div>
           <div class="hotel-main-info">
             <el-image
@@ -93,7 +93,9 @@
             <div class="room-info-wrapper">
               <div class="room-basic-info">
                 <div class="room-name">{{ room.roomType }}</div>
-                <div class="room-price">￥{{ room?.price || '200' }}</div>
+                <div class="room-price">￥{{ room?.price || '200' }}
+                  <span style="color: darkgray;">当前剩余：{{ room.inventory ?? '—' }} 间</span>
+                </div>
               </div>
               <!-- 将 info 数据以行列形式展示 -->
               <el-row :gutter="10" class="room-info-descriptions">
@@ -108,12 +110,47 @@
                   </div>
                 </el-col>
               </el-row>
-              <!-- 预订按钮 -->
-              <div class="room-book-btn">
-                <el-button type="primary" @click="bookNow(room)">立即预订</el-button>
               </div>
+              <!-- 原来的“立即预订”按钮 -->
+            <div class="room-book-btn">
+              <el-button type="primary" @click="openDialog(room)">
+                立即预订
+              </el-button>
             </div>
           </div>
+          <!-- 弹窗：确认预订信息 -->
+          <el-dialog
+            v-model="dialogVisible"
+            width="480px"
+            title="确认预订信息"
+            :before-close="() => (dialogVisible = false)"
+          >
+          <p>即将创建订单，确认预订信息是否无误：</p>
+          <!-- 日期范围选择器 -->
+          <el-date-picker
+            v-model="dateRange"
+            type="daterange"
+            unlink-panels
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="YYYY-MM-DD"
+            :disabled-date="disablePastDate"
+            style="width: 100%; margin-top: 12px;"/>
+            <el-input v-model="userPhone" placeholder="预留手机号" />
+            <span>预订房间数量</span>
+            <el-input-number v-model="bookCount" :min="1" :max="10"/>
+          <!-- 弹窗底部按钮 -->
+          <template #footer>
+            <el-button @click="dialogVisible = false">取消</el-button>
+            <el-button
+              type="primary"
+              :disabled="dateRange.length !== 2"
+              @click="confirmBooking"
+            >
+              确定
+            </el-button>
+          </template>
+        </el-dialog>
           <!-- 内嵌 Collapse 展开详细描述，使用网格布局 -->
           <el-collapse v-model="activeRoomDetails[String(room.roomTypeId)]" expand>
             <el-collapse-item :name="room.roomTypeId">
@@ -143,9 +180,11 @@
     <!-- 第三部分：评论展示 -->
     <div class="comments-section">
       <h3>酒店评论</h3>
+      <el-divider />
       <div class="ratings-header">
         <div class="total-rating">
-          <el-rate :model-value="totalRating" disabled></el-rate>
+          <span>总评分：</span>
+          <el-rate :model-value="totalRating" disabled size="large"></el-rate>
           <span class="score-text">{{ totalRating }}</span>
         </div>
         <div class="detailed-ratings">
@@ -173,6 +212,7 @@
           </el-row>
         </div>
       </div>
+      <el-divider />
       <div class="comments-list">
         <el-row
           v-for="review in reviewsList"
@@ -190,8 +230,8 @@
               />
               <div class="user-name">{{ review.userInfo?.userName }}</div>
               <div class="user-extra">
-                共{{ review.userInfo?.count }}条点评 /
-                {{ formatBookingDate(review.createdAt ?? '') }}入住 /
+                共点评{{ review.userInfo?.count }}条 <el-divider direction="vertical" />
+                {{ formatBookingDate(review.createdAt ?? '') }}入住 <el-divider direction="vertical" />
                 {{ review.userInfo?.roomType }}
               </div>
             </div>
@@ -218,11 +258,9 @@ import type { IHotels } from '@/api/interface/hotels/hotels'
 import type { IReviews } from '@/api/interface/reviews/reviews'
 import type { IRoomTypes } from '@/api/interface/roomtypes/roomTypes'
 import { useHotelHistoryStore, type HotelHistory } from '@/stores/hotelHistory'
+import { getRoomTypeInventoryDetailApi } from '@/api/modules/roomtypeinventory/roomTypeInventory'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-
-// 导入本地图标资源
-import locationIcon from '@/assets/定位.png'
 import airplaneIcon from '@/assets/飞机.png'
 import trainIcon from '@/assets/火车.png'
 import metroIcon from '@/assets/地铁.png'
@@ -230,13 +268,23 @@ import collectedIcon from '@/assets/收藏.png'            // 收藏未激活
 import collectedActiveIcon from '@/assets/收藏-a.png'    // 收藏已激活
 import { is } from '@/utils/is'
 
+// ---- 响应式状态 ----
+const dialogVisible = ref(false);
+/** 存储用户在弹窗中选的起止日期，格式为 ['yyyy-MM-dd','yyyy-MM-dd'] */
+const dateRange = ref<string[]>([]);
+const userPhone = ref<string>('');
+const bookCount = ref<number>(1);
+/** 打开弹窗时，缓存当前房型信息 */
+const selectedRoom = ref<IRoomTypes.Row | null>(null);
+
 const route = useRoute()
 const router = useRouter()
 const hotelId = (route.params.id as string) || "JD0000001970"
 // 收藏状态
 const isCollected = ref(false)
 const hotelDetail = ref<IHotels.Row | null>(null)
-const roomTypesList = ref<IRoomTypes.Row[]>([])
+type IRoomWithInventory = IRoomTypes.Row & { inventory?: number }
+const roomTypesList = ref<IRoomWithInventory[]>([])
 const reviewsList = ref<IReviews.Row[]>([])
 const trafficList = ref<TrafficItem[]>([])
 
@@ -352,18 +400,48 @@ function parseRoomDetail(detailStr: string): Record<string, string> {
   })
   return detailObj
 }
-
-// 预订按钮点击事件（示例）
-function bookNow(room: IRoomTypes.Row) {
-  // 此处可跳转到预订页面或调起预订逻辑
-  console.log("预订房型：", room.roomTypeId)
+/** 点击“立即预订”时打开弹窗，并保存房型 */
+function openDialog(room: IRoomTypes.Row) {
+  selectedRoom.value = room;
+  // 清空上次的日期
+  dateRange.value = [];
+  dialogVisible.value = true;
 }
 
+/** 限制只能选今天及往后日期 */
+function disablePastDate(date: Date) {
+  // 将“今天 00:00”转为时间戳，日期小于该值即为禁用
+  const todayStart = new Date().setHours(0, 0, 0, 0);
+  return date.getTime() < todayStart;
+}
+
+/** 点击“确定”时，校验并跳转到下一个页面 */
+function confirmBooking() {
+  if (
+    !selectedRoom.value ||
+    dateRange.value.length !== 2
+  ) {
+    return;
+  }
+  const [startDate, endDate] = dateRange.value;
+  router.push({
+    path: '/payments',
+    query: {
+      roomTypeId: selectedRoom.value.roomTypeId?.toString() || '',
+      userPhone: userPhone.value,
+      bookCount: bookCount.value,
+      hotelId,
+      startDate,
+      endDate,
+    },
+  });
+  dialogVisible.value = false;
+}
 onMounted(() => {
   getHotelsDetailApi({ id: hotelId })
     .then((res) => {
       hotelDetail.value = res.data
-
+      totalRating.value = hotelDetail.value?.rate ?? 4.5
       // 记录浏览历史（示例）
       const hotelHistoryStore = useHotelHistoryStore()
       const hotel: HotelHistory = {
@@ -395,21 +473,35 @@ onMounted(() => {
     })
     .then((res) => {
       roomTypesList.value = res.data.rows
-      // 获取酒店评论列表数据
-      return getReviewsList({ hotelId, limit: 10, page: 1 })
-    })
-    .then((res) => {
-      reviewsList.value = res.data.rows
-      return Promise.all(
-        reviewsList.value.map((review) =>
-          getUserTotalReviews({ id: Number(review.userId), bookingId: String(review.bookingId) })
-            .then((userRes) => {
-              review.userInfo = userRes.data
-              return review
+      Promise.all(
+        roomTypesList.value.map((room) =>
+          getRoomTypeInventoryDetailApi({ roomTypeId : room.roomTypeId ?? '' })
+            .then((detailRes) => {
+              room.inventory = detailRes.data.availableQuantity
+              return room
             })
         )
       )
+      // 获取酒店评论列表数据
+      return getReviewsList({ hotelId, limit: 10, page: 1 })
     })
+    .then(async (res) => {
+      // 先拿到原始数组
+      reviewsList.value = res.data.rows
+
+      // 顺序调用：for…of + await
+      const sequenced: typeof reviewsList.value = []
+      for (const review of reviewsList.value) {
+        const userRes = await getUserTotalReviews({
+          id: Number(review.userId),
+          bookingId: String(review.bookingId)
+        })
+        review.userInfo = userRes.data
+        sequenced.push(review)
+      }
+
+      return sequenced
+  })
     .catch((error) => {
       console.error('数据加载失败：', error)
     })
@@ -685,13 +777,16 @@ onMounted(() => {
 }
 
 .comment-content {
-  font-size: 14px;
+  font-size: 16px;
   color: #555;
+  margin-top: 18px;
 }
 
 .comment-time {
+  display: flex;
+  justify-content: flex-end;
   font-size: 12px;
   color: #999;
-  margin-top: 6px;
+  margin-top: 80px;
 }
 </style>

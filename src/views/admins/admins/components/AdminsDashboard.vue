@@ -26,28 +26,41 @@
     <div class="recent-orders">
       <h2>近期成交</h2>
       <el-table :data="recentOrders" style="width: 100%">
-        <el-table-column prop="orderId" label="Order ID"  />
-        <el-table-column prop="customer" label="Customer" />
-        <el-table-column prop="date" label="Date"  />
-        <el-table-column prop="amount" label="Amount"  />
+        <el-table-column prop="paymentId" label="Payment ID" />
+        <el-table-column prop="bookingId" label="Booking ID" />
+        <el-table-column prop="amount" label="Amount" />
+        <el-table-column prop="createdAt" label="Date" />
+        <el-table-column prop="paymentStatus" label="Status" />
       </el-table>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-
-// 造数据
+import { ref, onMounted } from 'vue'
+import { getPaymentDetailByHotel } from '@/api/modules/payment/payment'
+import type { IPayment } from '@/api/interface/payment/payment'
+import { useAdminStore } from '@/stores/hotelAdminStore'
+const adminStore = useAdminStore()
+const ownerHotelId = adminStore.user.ownerHotelId
+// 模拟统计数据，前面三个暂时保留
 const totalOrders = ref(150)
 const totalRevenue = ref('￥250,000')
 const customerFeedback = ref(4.7)
-const recentOrders = ref([
-  { orderId: '00123', customer: 'John Doe', date: '2023-04-01', amount: '￥1500' },
-  { orderId: '00124', customer: 'Jane Smith', date: '2023-04-02', amount: '￥1800' },
-  { orderId: '00125', customer: 'Alice Johnson', date: '2023-04-03', amount: '￥1200' },
-  { orderId: '00126', customer: 'Bob Brown', date: '2023-04-04', amount: '￥2000' },
-])
+
+// 近期成交数据
+const recentOrders = ref<IPayment.Row[]>([])
+
+onMounted(async () => {
+  if (!ownerHotelId) return
+  try {
+    const response = await getPaymentDetailByHotel({ id: ownerHotelId })
+    // 接口返回的 Row[] 已按成交时间倒序
+    recentOrders.value = response.data
+  } catch (error) {
+    console.error('获取近期成交数据失败：', error)
+  }
+})
 </script>
 
 <style scoped>
